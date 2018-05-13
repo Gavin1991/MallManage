@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <title>首页</title>
+    <style>
+        .row {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            padding-top: 10px;
+        }
+
+        #background {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            background: rgba(0, 0, 0, 0.4);
+            width: 100%; /*宽度设置为100%，这样才能使隐藏背景层覆盖原页面*/
+            height: 100%;
+            filter: alpha(opacity=60); /*设置透明度为60%*/
+            opacity: 0.6; /*非IE浏览器下设置透明度为60%*/
+            z-Index: 99;
+        }
+
+        div textarea {
+            width: 200px;
+            height: 100px;
+        }
+
+        div input {
+            width: 40px;
+            padding-left: 5px;
+        }
+
+        .image_block img {
+            width: 100px;
+            height: 100px;
+
+        }
+
+        .image-gallery {
+            height: 120px;
+            /*width: 100%;*/
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 10px 5px;
+            white-space: nowrap;
+            border: 1px solid #eeeeee;
+            margin-left: -39px;
+        }
+
+        .image-gallery .image_block {
+            width: 100px;
+            height: 100px;
+            box-sizing: border-box;
+            white-space: normal;
+            word-wrap: break-word;
+            word-break: break-all;
+            overflow: hidden;
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .delete_image {
+            display: block;
+            float: right;
+            position: relative;
+            right: 0;
+            top: -100px;
+            background-color: red;
+            width: 13px;
+            height: 13px;
+            line-height: 13px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+        }
+
+        .delete_image:hover {
+            color: black;
+        }
+
+        .file-input {
+            opacity: 0;
+        }
+
+        .addBtn {
+            height: 30px;
+            width: 30px;
+            background-color: aquamarine;
+            text-align: center;
+            line-height: 30px;
+            font-size: 25px;
+            cursor: pointer;
+            position: relative;
+            top: 30px;
+            margin-right: 10px;
+            float: left;
+        }
+
+        .addBtn:hover {
+            color: #fff;
+        }
+
+        .addBtn input {
+            position: absolute;
+            width: 30px;
+            left: 0px;
+            padding: 0px;
+            height: 30px;
+            font-size: 0;
+        }
+
+        .set_poster {
+            position: relative;
+            display: block;
+            top: -42px;
+            text-align: center;
+            line-height: 40px;
+            background-color: transparent;
+            color: transparent;
+            cursor: pointer;
+            z-index: 9;
+        }
+
+        .set_poster:hover {
+            color: black;
+            background-color: cadetblue;;
+        }
+
+        .add_sign {
+            position: absolute;
+            right: 5px;
+            cursor: pointer;
+        }
+
+        #add .form-group {
+            overflow: hidden;
+        }
+
+        #add .priceLabel {
+            width: 70px;
+        }
+
+        #add .priceInput {
+            width: 100px;
+        }
+
+        #add button {
+            margin: auto;
+            width: 120px;
+        }
+
+        #add_area {
+            position: absolute;
+            width: 1000px;
+            padding: 30px;
+            background-color: #fff;
+            z-Index: 100;
+            left: 50%;
+            margin-left: -500px;
+        }
+
+        #loading {
+            position: absolute;
+            background: rgba(0, 0, 0, 1);
+            width: 120px; /*宽度设置为100%，这样才能使隐藏背景层覆盖原页面*/
+            height: 100px;
+            filter: alpha(opacity=60); /*设置透明度为60%*/
+            opacity: 0.6; /*非IE浏览器下设置透明度为60%*/
+            z-Index: 1000;
+            top: 50%;
+            left: 50%;
+            color: white;
+            margin: -100px 0 0 -120px;
+            text-align: center;
+            line-height: 100px;
+        }
+
+        .poster_area {
+            border: 1px solid #e00;
+        }
+    </style>
+</head>
+<body>
+<ul class="nav nav-tabs">
+    <li role="presentation" class="active"><a href="#">首页</a></li>
+    <li role="presentation"><a href="#">商品</a></li>
+    <li role="presentation"><a href="#">订单</a></li>
+</ul>
+<br/>
+<br/>
+<br/>
+<div id="global">
+    <div id="background" v-if="show"></div>
+    <div id="loading" v-if="isUploading">
+        正在上传 {{percent}}
+    </div>
+</div>
+<div id="add">
+    <div style="text-align: center">
+        <button type="button" class="btn btn-success" v-on:click="showAddArea">+添加商品</button>
+    </div>
+    <div id="add_area" v-if="show">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">商品标题</label>
+            <div class="col-sm-10">
+                <textarea class="form-control" rows="3" v-model="product.name"></textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">商品描述</label>
+            <div class="col-sm-10">
+                <textarea class="form-control" rows="3" v-model="product.description"></textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">轮播图片</label>
+            <div class="col-sm-1">
+                <div class="col-sm-1 addBtn"><span class="add_sign">+</span>
+                    <input class="file-input" type="file" @change="addSlide"/>
+                </div>
+            </div>
+            <div class="col-sm-9">
+                <div class="image-gallery">
+                    <div class="image_block poster_area">
+                        <img v-bind:src="product.poster" v-if="product.poster"/>
+                    </div>
+                    <div class="image_block" v-for="slide in product.slides.split(';')" v-if="slide">
+                        <div v-if="slide">
+                            <img v-bind:src="slide"/>
+                            <span @click="deleteSlide" v-bind:data-id="product.id" v-bind:data-url="slide"
+                                  class="delete_image">x</span>
+                            <span @click="setPoster" v-bind:data-id="product.id" v-bind:data-url="slide"
+                                  class="set_poster">设为封面</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">详情图片</label>
+            <div class="col-sm-1">
+                <div class="col-sm-1 addBtn"><span class="add_sign">+</span>
+                    <input class="file-input" type="file" @change="addDetail"
+                           v-bind:data-id="product.id">
+                </div>
+            </div>
+            <div class="col-sm-9">
+                <div class="image-gallery">
+                    <div class="image_block" v-for="detail in product.detailImages.split(';')" v-if="detail">
+                        <div v-if="detail">
+                            <img v-bind:src="detail"/>
+                            <span @click="deleteDetail" v-bind:data-id="product.id" v-bind:data-url="detail"
+                                  class="delete_image">x</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">价格</label>
+            <div class="col-sm-10 form-inline">
+                <div class="col-sm-3 input-group">
+                    <div class="input-group-addon priceLabel">vip价格</div>
+                    <input type="text" class="form-control priceInput" v-model:value="product.vipPrice">
+                </div>
+                <div class="col-sm-3 input-group">
+                    <div class="input-group-addon priceLabel">普通价格</div>
+                    <input type="text" class="form-control priceInput" v-model:value="product.price">
+                </div>
+                <div class="col-sm-3 input-group">
+                    <div class="input-group-addon priceLabel">宣称价格</div>
+                    <input type="text" class="form-control priceInput" v-model:value="product.fakePrice">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">库存数量</label>
+            <div class="col-sm-10 form-inline">
+                <input type="text" class="form-control priceInput" v-model:value="product.leftCount">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">类别</label>
+            <div class="col-sm-10 form-inline">
+                <input type="text" class="form-control priceInput" v-model:value="product.type">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">标签</label>
+            <div class="col-sm-10 form-inline">
+                <input type="text" class="form-control priceInput" v-model:value="product.tag">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6 form-inline" style="text-align: right">
+                <button type="button" class="btn btn-warn" v-on:click="showAddArea">取消</button>
+            </div>
+            <div class="col-sm-6 form-inline" style="text-align: left">
+                <button type="button" class="btn btn-success" v-on:click="saveOneProduct">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="app">
+    <br/>
+    <br/>
+    <br/>
+    <hr/>
+    <div class="table table-bordered">
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="col-md-1">id</div>
+                <div class="col-md-6">名称</div>
+                <div class="col-md-5">描述</div>
+            </div>
+
+
+            <div class="col-md-1">海报</div>
+            <div class="col-md-2">轮播页</div>
+            <div class="col-md-2">详情页</div>
+            <div class="col-md-4">
+                <div>
+                    <div class="col-md-1">价格</div>
+                    <div class="col-md-1">vip价格</div>
+                    <div class="col-md-2">宣称价格</div>
+                    <div class="col-md-2">库存数量</div>
+                    <div class="col-md-2"> 标签</div>
+                    <div class="col-md-2">状态</div>
+                    <div class="col-md-2">操作</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row" v-for="product in products">
+            <div class="col-md-3">
+                <div class="col-md-1">{{ product.id }}</div>
+                <div class="col-md-6"><textarea rows="4" class="form-control" v-model="product.name"></textarea>
+                </div>
+                <div class="col-md-5"><textarea rows="4" class="form-control" v-model="product.description"></textarea>
+                </div>
+
+            </div>
+
+            <div class="col-md-1">
+                <div class="image_block">
+                    <img v-bind:src="product.poster"/>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="addBtn"><span class="add_sign">+</span>
+                    <input class="file-input" type="file" id="addSlideInput" @change="addSlide"
+                           v-bind:data-id="product.id">
+                </div>
+                <div class="image-gallery">
+
+
+                    <div class="image_block" v-for="slide in product.slides.split(';')" v-if="slide">
+                        <div v-if="slide">
+                            <img v-bind:src="slide"/>
+                            <span @click="deleteSlide" v-bind:data-id="product.id" v-bind:data-url="slide"
+                                  class="delete_image">x</span>
+                            <span @click="setPoster" v-bind:data-id="product.id" v-bind:data-url="slide"
+                                  class="set_poster">设为封面</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="addBtn">
+                    <span class="add_sign">+</span>
+                    <input class="file-input" type="file" id="addDetailImageInput" @change="addDetailImage"
+                           v-bind:data-id="product.id">
+                </div>
+                <div class="image-gallery">
+                    <div class="image_block" v-for="detail in product.detailImages.split(';')" v-if="detail">
+                        <div v-if="detail">
+                            <img v-bind:src="detail"/>
+                            <span @click="deleteDetailImage" v-bind:data-id="product.id" v-bind:data-url="detail"
+                                  class="delete_image">x</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div>
+                    <div class="col-md-1"><input v-model:value="product.price"/></div>
+                    <div class="col-md-1"><input v-model:value="product.vipPrice"/></div>
+                    <div class="col-md-2"><input v-model:value="product.fakePrice"/></div>
+                    <div class="col-md-2"><input v-model:value="product.leftCount"/></div>
+                    <div class="col-md-2"><input v-model:value="product.tag"/></div>
+                    <div class="col-md-2">
+                        <select v-model="product.status">
+                            <option v-for="oneStatus in status" v-bind:value="oneStatus.value">
+                                {{ oneStatus.text }}
+                            </option>
+                        </select>
+
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-success" v-on:click="saveItem" v-bind:data-id="product.id">
+                            保存
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <select id="example-getting-started" multiple="multiple">
+                <option value="cheese">Cheese</option>
+                <option value="tomatoes">Tomatoes</option>
+                <option value="mozarella">Mozzarella</option>
+                <option value="mushrooms">Mushrooms</option>
+                <option value="pepperoni">Pepperoni</option>
+                <option value="onions">Onions</option>
+            </select>
+        </div>
+    </div>
+
+</div>
+<script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="http://jssdk-v2.demo.qiniu.io/dist/qiniu.min.js"></script>
+<script src="https://cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js"></script>
+<script>
+
+    var global = new Vue({
+        el: '#global',
+        data: {
+            show: false,
+            percent: 0,
+            isUploading: false,
+            baseUrl: "http://localhost:8080/WechatMall/mg/"
+        },
+        methods: {
+            post: function (url, data, call) {
+                $.post({
+                    url: this.baseUrl + url,
+                    data: data,
+                    success: call,
+                    error: function (e) {
+                        debugger;
+                        alert("call: " + url + "错误" + e);
+                    }
+                })
+            },
+            uploadImage: function (file, callBack) {
+                this.post("getUploadToken", {}, function (data) {
+                    var token = data;
+                    var key = md5(new Date());
+                    var config = {
+                        useCdnDomain: true,
+                        disableStatisticsReport: false,
+                        retryCount: 5,
+                        region: qiniu.region.z0
+                    };
+                    var putExtra = {
+                        fname: "",
+                        params: {},
+                        mimeType: null
+                    };
+
+                    var observer = {
+                        next: function (res) {
+                            global.isUploading = true;
+                            global.percent = res.total.percent.toFixed(2);
+                        },
+                        error: function () {
+                            alert("上传失败！");
+                        },
+                        complete: function (res) {
+                            global.isUploading = false;
+                            callBack(res);
+                        }
+                    };
+                    var observable = qiniu.upload(file, key, token, putExtra, config);
+                    observable.subscribe(observer);
+                });
+            }
+        }
+
+    });
+
+    var add = new Vue({
+        el: '#add',
+        data: {
+            show: false,
+            product: {
+                name: "",
+                description: "",
+                poster: "",
+                slides: "",
+                detailImages: "",
+                price: "",
+                vipPrice: "",
+                fakePrice: "",
+                leftCount: "",
+                tag: "",
+                type: ""
+            }
+        },
+        methods: {
+            saveOneProduct: function () {
+                global.post("saveProduct",add.product, function (res) {
+                    alert("保存成功！");
+                })
+            },
+            setPoster: function () {
+                add.product.poster = event.currentTarget.dataset.url;
+            },
+            deleteSlide: function () {
+                var url = event.currentTarget.dataset.url;
+                add.product.slides = add.product.slides.replace(url + ";", "");
+                add.product.slides = add.product.slides.replace(url, "");
+            },
+            showAddArea: function () {
+                global.show = !global.show;
+                add.show = !add.show;
+            },
+            addSlide: function (event) {
+                if (!event.currentTarget.files) return;
+                var file = event.currentTarget.files[0];
+
+                global.uploadImage(file, function (res) {
+                    var fileName = res.key;
+                    add.product.slides = add.product.slides + "http://p8guj9ydr.bkt.clouddn.com/" + fileName + ";";
+                });
+            },
+            addDetail: function (event) {
+                if (!event.currentTarget.files) return;
+                var file = event.currentTarget.files[0];
+
+                global.uploadImage(file, function (res) {
+                    var fileName = res.key;
+                    add.product.detailImages = add.product.detailImages + "http://p8guj9ydr.bkt.clouddn.com/" + fileName + ";";
+                });
+            },
+            deleteDetail: function () {
+                var url = event.currentTarget.dataset.url;
+                add.product.detailImages = add.product.detailImages.replace(url + ";", "");
+                add.product.detailImages = add.product.detailImages.replace(url, "");
+            }
+        }
+    });
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            baseUrl: "http://localhost:8080/WechatMall/mg/",
+            products: [],
+            status: [
+                {text: "发布", value: "1"},
+                {text: "下架", value: "2"},
+                {text: "待发布", value: "3"}
+            ]
+        },
+        methods: {
+            setPoster: function (event) {
+                var url = event.currentTarget.dataset.url;
+                var id = event.currentTarget.dataset.id;
+                var product = app.products.filter(function (item) {
+                    return item.id == id;
+                })[0];
+
+                product.poster = url;
+            },
+            addSlide: function (event) {
+                if (!event.currentTarget.files) return;
+                var file = event.currentTarget.files[0];
+                var id = event.currentTarget.dataset.id;
+                var product = app.products.filter(function (item) {
+                    return item.id == id;
+                })[0];
+
+                global.uploadImage(file, function (res) {
+                    var fileName = res.key;
+                    product.slides = product.slides + "http://p8guj9ydr.bkt.clouddn.com/" + fileName + ";";
+                });
+            },
+
+            deleteSlide: function (event) {
+                var url = event.currentTarget.dataset.url;
+                var id = event.currentTarget.dataset.id;
+                var product = app.products.filter(function (item) {
+                    return item.id == id;
+                })[0];
+
+                product.slides = product.slides.replace(url + ";", "");
+                product.slides = product.slides.replace(url, "");
+            },
+            deleteDetailImage: function (event) {
+                var url = event.currentTarget.dataset.url;
+                var id = event.currentTarget.dataset.id;
+                var product = app.products.filter(function (item) {
+                    return item.id == id;
+                })[0];
+
+                product.detailImages = product.detailImages.replace(url + ";", "");
+                product.detailImages = product.detailImages.replace(url, "");
+            },
+            addDetailImage: function (event) {
+                if (!event.currentTarget.files) return;
+                var file = event.currentTarget.files[0];
+                var id = event.currentTarget.dataset.id;
+                var product = app.products.filter(function (item) {
+                    return item.id == id;
+                })[0];
+
+                this.uploadImage(file, function (res) {
+                    var fileName = res.key;
+                    product.detailImages = product.detailImages + "http://p8guj9ydr.bkt.clouddn.com/" + fileName + ";";
+                });
+            },
+            saveItem: function (event) {
+                var id = event.currentTarget.dataset.id;
+                var product = app.products.filter(function (item) {
+                    return item.id == id;
+                })[0];
+
+                global.post("saveProduct", product, function (data) {
+                    alert("保存成功");
+                });
+            },
+            init: function () {
+                global.post("getProducts", {}, function (data) {
+                    app.products = JSON.parse(data).bizData;
+                });
+
+            }
+        }
+    });
+
+    app.init();
+
+</script>
+</body>
+</html>
